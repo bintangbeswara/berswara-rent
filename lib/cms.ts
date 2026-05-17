@@ -12,6 +12,8 @@ export type SiteContent = {
   heroTitle: string;
   heroDescription: string;
   aboutSummary: string;
+  howToRentTitle: string;
+  howToRentSteps: string[];
   contact: {
     whatsapp: string;
     instagram: string;
@@ -31,6 +33,13 @@ const defaultContent: Record<Locale, SiteContent> = {
     heroTitle: "Sewa Perlengkapan Bayi Premium di Bandung",
     heroDescription: "Pilihan sewa stroller, push walker, dan push bike yang aman, bersih, dan praktis.",
     aboutSummary: "Kami membantu keluarga di Bandung mengakses perlengkapan bayi premium tanpa biaya kepemilikan dan beban penyimpanan yang tinggi.",
+    howToRentTitle: "Cara Sewa",
+    howToRentSteps: [
+      "Pilih perlengkapan dari katalog.",
+      "Cek ketersediaan via WhatsApp.",
+      "Konfirmasi booking, deposit, dan pembayaran.",
+      "Jadwalkan pengantaran atau pengambilan di Bandung.",
+    ],
     contact: {
       whatsapp: "+62 812-3456-7890",
       instagram: "@berswararent",
@@ -78,6 +87,13 @@ const defaultContent: Record<Locale, SiteContent> = {
     heroTitle: "Cute Premium Baby Gear Rental in Bandung",
     heroDescription: "Safe, clean, and practical rental options for strollers, push walkers, and push bikes.",
     aboutSummary: "We help families in Bandung access premium baby gear without high ownership cost or storage burden.",
+    howToRentTitle: "How to Rent",
+    howToRentSteps: [
+      "Choose your gear from the catalog.",
+      "Check availability via WhatsApp.",
+      "Confirm booking, deposit, and payment.",
+      "Schedule delivery or pick-up in Bandung.",
+    ],
     contact: {
       whatsapp: "+62 812-3456-7890",
       instagram: "@berswararent",
@@ -126,7 +142,20 @@ export const getSiteContent = cache(async (locale: Locale): Promise<SiteContent>
     const supabase = await createSupabaseServerClient();
     const { data } = await supabase.from("site_content").select("value").eq("key", "site").eq("locale", locale).maybeSingle();
     if (!data?.value) return defaultContent[locale];
-    return data.value as SiteContent;
+    const base = defaultContent[locale];
+    const value = data.value as Partial<SiteContent>;
+    return {
+      ...base,
+      ...value,
+      contact: {
+        ...base.contact,
+        ...(value.contact ?? {}),
+      },
+      benefits: Array.isArray(value.benefits) ? value.benefits : base.benefits,
+      testimonials: Array.isArray(value.testimonials) ? value.testimonials : base.testimonials,
+      faqs: Array.isArray(value.faqs) ? value.faqs : base.faqs,
+      howToRentSteps: Array.isArray(value.howToRentSteps) ? value.howToRentSteps : base.howToRentSteps,
+    };
   } catch {
     return defaultContent[locale];
   }

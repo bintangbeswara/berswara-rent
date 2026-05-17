@@ -24,6 +24,26 @@ export default async function AdminPage({ searchParams }: Props) {
 
   const params = await searchParams;
   const locale = (typeof params.locale === "string" ? params.locale : "id") as Locale;
+  const invalidFields = new Set(
+    typeof params.invalid === "string" ? params.invalid.split(",").map((item) => item.trim()).filter(Boolean) : [],
+  );
+  const hasValidationError = params.error === "validation";
+  const isInvalid = (field: string) => invalidFields.has(field);
+  const invalidInputClass = (field: string) =>
+    `mt-1 w-full rounded border px-3 py-2 ${isInvalid(field) ? "border-red-500 ring-1 ring-red-200" : ""}`;
+  const fieldLabels: Record<string, string> = {
+    heroBadge: "Hero Badge",
+    heroTitle: "Hero Title",
+    heroDescription: "Hero Description",
+    aboutSummary: "About Summary",
+    howToRentTitle: "How To Rent Title",
+    howToRentStepsText: "How To Rent Steps",
+    contactWhatsapp: "WhatsApp",
+    contactInstagram: "Instagram",
+    contactLocation: "Location",
+    benefitsJson: "Benefits",
+    faqsJson: "FAQs",
+  };
   const content = await getSiteContent(locale);
 
   return (
@@ -64,20 +84,32 @@ export default async function AdminPage({ searchParams }: Props) {
       <section className="rounded border border-[var(--brand-soft)] bg-[var(--surface)] p-5">
         <h2 className="text-xl font-semibold">Site Content ({locale.toUpperCase()})</h2>
         <p className="mt-1 text-xs text-[var(--muted)]">Editing localized content for {locale === "id" ? "Indonesia" : "English"}.</p>
+        {hasValidationError ? (
+          <div className="mt-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <p className="font-semibold">Please fix invalid inputs:</p>
+            <ul className="mt-1 list-disc pl-5">
+              {Array.from(invalidFields).map((field) => (
+                <li key={field}>{fieldLabels[field] ?? field}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         <form action={saveSiteContent} className="mt-5 space-y-4">
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="heroImage" value={content.heroImage} />
           <input type="hidden" name="logoImage" value={content.logoImage} />
           <input type="hidden" name="faviconImage" value={content.faviconImage} />
-          <label className="block text-sm">Hero Badge<input name="heroBadge" defaultValue={content.heroBadge} className="mt-1 w-full rounded border px-3 py-2" /></label>
-          <label className="block text-sm">Hero Title<input name="heroTitle" defaultValue={content.heroTitle} className="mt-1 w-full rounded border px-3 py-2" /></label>
-          <label className="block text-sm">Hero Description<textarea name="heroDescription" defaultValue={content.heroDescription} className="mt-1 w-full rounded border px-3 py-2" rows={3} /></label>
-          <label className="block text-sm">About Summary<textarea name="aboutSummary" defaultValue={content.aboutSummary} className="mt-1 w-full rounded border px-3 py-2" rows={3} /></label>
+          <label className="block text-sm">Hero Badge *<input name="heroBadge" required defaultValue={content.heroBadge} className={invalidInputClass("heroBadge")} /></label>
+          <label className="block text-sm">Hero Title *<input name="heroTitle" required defaultValue={content.heroTitle} className={invalidInputClass("heroTitle")} /></label>
+          <label className="block text-sm">Hero Description *<textarea name="heroDescription" required defaultValue={content.heroDescription} className={invalidInputClass("heroDescription")} rows={3} /></label>
+          <label className="block text-sm">About Summary *<textarea name="aboutSummary" required defaultValue={content.aboutSummary} className={invalidInputClass("aboutSummary")} rows={3} /></label>
+          <label className="block text-sm">How To Rent Title *<input name="howToRentTitle" required defaultValue={content.howToRentTitle} className={invalidInputClass("howToRentTitle")} /></label>
+          <label className="block text-sm">How To Rent Steps (one per line) *<textarea name="howToRentStepsText" required defaultValue={content.howToRentSteps.join("\n")} className={invalidInputClass("howToRentStepsText")} rows={4} /></label>
 
           <div className="grid gap-3 md:grid-cols-3">
-            <label className="block text-sm">WhatsApp<input name="contactWhatsapp" defaultValue={content.contact.whatsapp} className="mt-1 w-full rounded border px-3 py-2" /></label>
-            <label className="block text-sm">Instagram<input name="contactInstagram" defaultValue={content.contact.instagram} className="mt-1 w-full rounded border px-3 py-2" /></label>
-            <label className="block text-sm">Location<input name="contactLocation" defaultValue={content.contact.location} className="mt-1 w-full rounded border px-3 py-2" /></label>
+            <label className="block text-sm">WhatsApp *<input name="contactWhatsapp" required defaultValue={content.contact.whatsapp} className={invalidInputClass("contactWhatsapp")} /></label>
+            <label className="block text-sm">Instagram *<input name="contactInstagram" required defaultValue={content.contact.instagram} className={invalidInputClass("contactInstagram")} /></label>
+            <label className="block text-sm">Location *<input name="contactLocation" required defaultValue={content.contact.location} className={invalidInputClass("contactLocation")} /></label>
           </div>
 
           <AdminContentArraysEditor

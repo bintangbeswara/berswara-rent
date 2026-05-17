@@ -3,7 +3,7 @@ import { Baloo_2, Nunito } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { FloatingWhatsApp } from "@/components/floating-whatsapp";
+import { FloatingContactButtons } from "@/components/floating-contact-buttons";
 import { dictionaries, getLocale } from "@/lib/i18n";
 import { getSiteContent } from "@/lib/cms";
 
@@ -56,7 +56,7 @@ export default async function RootLayout({
             about: dict.header.about,
           }}
         />
-        <FloatingWhatsApp locale={locale} />
+        <FloatingContactButtons locale={locale} contact={content.contact} />
       </body>
     </html>
   );

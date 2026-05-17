@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductGallery } from "@/components/product-gallery";
 import { AvailabilityCalendar } from "@/components/availability-calendar";
-import { getDynamicProducts } from "@/lib/cms";
+import { getDynamicProducts, getSiteContent } from "@/lib/cms";
 import { createWhatsAppLink, formatCategoryLabel, formatIdr } from "@/lib/products";
 import { getLocale } from "@/lib/i18n";
 
@@ -27,6 +27,7 @@ export default async function ProductPage({ params }: Props) {
   const isId = locale === "id";
   const { id } = await params;
   const products = await getDynamicProducts();
+  const content = await getSiteContent(locale);
   const product = products.find((item) => item.id === id);
   if (!product) notFound();
 
@@ -94,7 +95,7 @@ export default async function ProductPage({ params }: Props) {
             <div className="col-span-2"><dt className="text-[var(--muted)]">{isId ? "Dimensi" : "Dimensions"}</dt><dd>{product.dimensions}</dd></div>
           </dl>
           <a
-            href={createWhatsAppLink(product.name)}
+            href={createWhatsAppLink(product.name, content.contact.whatsapp)}
             target="_blank"
             rel="noopener noreferrer"
             className="sticky bottom-3 inline-flex rounded bg-[var(--brand-primary)] px-4 py-3 text-sm font-medium text-white hover:opacity-90"

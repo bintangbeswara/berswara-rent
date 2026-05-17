@@ -94,6 +94,10 @@ export function AdminProductRichFields({ initialPrices, initialPhotos, initialVi
             Add
           </button>
         </div>
+        <div className="mb-3">
+          <input type="file" name="photoFiles" accept="image/*" multiple className="w-full rounded border px-3 py-2 text-sm" />
+          <p className="mt-1 text-xs text-[var(--muted)]">Selected files will be uploaded when you save the product.</p>
+        </div>
         <div className="space-y-2">
           {photos.map((item, index) => (
             <div key={index} className="grid gap-2 md:grid-cols-[1fr_auto_auto_auto]">

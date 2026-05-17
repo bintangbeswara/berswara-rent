@@ -35,10 +35,31 @@ export async function signOutAdmin() {
 export async function saveSiteContent(formData: FormData) {
   const { supabase } = await requireAdmin();
   const locale = (formData.get("locale") as Locale) ?? "id";
+  const invalidFields: string[] = [];
+  const redirectValidation = () =>
+    redirect(`/admin?locale=${locale}&error=validation&invalid=${encodeURIComponent(invalidFields.join(","))}`);
 
   const benefitsRaw = String(formData.get("benefitsJson") ?? "[]");
   const testimonialsRaw = String(formData.get("testimonialsText") ?? "");
   const faqsRaw = String(formData.get("faqsJson") ?? "[]");
+  const howToRentStepsRaw = String(formData.get("howToRentStepsText") ?? "");
+  const heroBadge = String(formData.get("heroBadge") ?? "").trim();
+  const heroTitle = String(formData.get("heroTitle") ?? "").trim();
+  const heroDescription = String(formData.get("heroDescription") ?? "").trim();
+  const aboutSummary = String(formData.get("aboutSummary") ?? "").trim();
+  const howToRentTitle = String(formData.get("howToRentTitle") ?? "").trim();
+  const contactWhatsapp = String(formData.get("contactWhatsapp") ?? "").trim();
+  const contactInstagram = String(formData.get("contactInstagram") ?? "").trim();
+  const contactLocation = String(formData.get("contactLocation") ?? "").trim();
+
+  if (!heroBadge) invalidFields.push("heroBadge");
+  if (!heroTitle) invalidFields.push("heroTitle");
+  if (!heroDescription) invalidFields.push("heroDescription");
+  if (!aboutSummary) invalidFields.push("aboutSummary");
+  if (!howToRentTitle) invalidFields.push("howToRentTitle");
+  if (!contactWhatsapp) invalidFields.push("contactWhatsapp");
+  if (!contactInstagram) invalidFields.push("contactInstagram");
+  if (!contactLocation) invalidFields.push("contactLocation");
 
   let benefits: Array<{ title: string; description: string }> = [];
   let faqs: Array<{ q: string; a: string }> = [];
@@ -52,14 +73,20 @@ export async function saveSiteContent(formData: FormData) {
         description: String(item?.description ?? "").trim(),
       }))
       .filter((item) => item.title && item.description);
+    if (!benefits.length) invalidFields.push("benefitsJson");
   } catch {
-    throw new Error("benefitsJson must be a valid JSON array of {title, description}");
+    invalidFields.push("benefitsJson");
   }
 
   const testimonials = testimonialsRaw
     .split("\n")
     .map((item) => item.trim())
     .filter(Boolean);
+  const howToRentSteps = howToRentStepsRaw
+    .split("\n")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  if (!howToRentSteps.length) invalidFields.push("howToRentStepsText");
 
   try {
     const parsed = JSON.parse(faqsRaw);
@@ -70,22 +97,27 @@ export async function saveSiteContent(formData: FormData) {
         a: String(item?.a ?? "").trim(),
       }))
       .filter((item) => item.q && item.a);
+    if (!faqs.length) invalidFields.push("faqsJson");
   } catch {
-    throw new Error("faqsJson must be a valid JSON array of {q, a}");
+    invalidFields.push("faqsJson");
   }
+
+  if (invalidFields.length) redirectValidation();
 
   const payload: SiteContent = {
     heroImage: String(formData.get("heroImage") ?? ""),
     logoImage: String(formData.get("logoImage") ?? ""),
     faviconImage: String(formData.get("faviconImage") ?? ""),
-    heroBadge: String(formData.get("heroBadge") ?? ""),
-    heroTitle: String(formData.get("heroTitle") ?? ""),
-    heroDescription: String(formData.get("heroDescription") ?? ""),
-    aboutSummary: String(formData.get("aboutSummary") ?? ""),
+    heroBadge,
+    heroTitle,
+    heroDescription,
+    aboutSummary,
+    howToRentTitle,
+    howToRentSteps,
     contact: {
-      whatsapp: String(formData.get("contactWhatsapp") ?? ""),
-      instagram: String(formData.get("contactInstagram") ?? ""),
-      location: String(formData.get("contactLocation") ?? ""),
+      whatsapp: contactWhatsapp,
+      instagram: contactInstagram,
+      location: contactLocation,
     },
     benefits,
     testimonials,
@@ -105,6 +137,7 @@ export async function saveSiteContent(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath("/about");
+  revalidatePath("/how-to-rent");
   revalidatePath("/admin");
   revalidatePath("/catalog");
   redirect(`/admin?saved=1&locale=${locale}`);
@@ -131,6 +164,9 @@ export async function saveProduct(formData: FormData) {
     | { mode?: "single"; date: string; status: "available" | "booked" }
     | { mode: "range"; startDate: string; endDate: string; status: "available" | "booked" }
   > = [];
+  const photoFiles = formData
+    .getAll("photoFiles")
+    .filter((item): item is File => item instanceof File && item.size > 0);
 
   try {
     const parsed = JSON.parse(pricesJson);
@@ -148,6 +184,26 @@ export async function saveProduct(formData: FormData) {
     photos = Array.isArray(parsed) ? parsed.map((item) => String(item).trim()).filter(Boolean) : [];
   } catch {
     throw new Error("photosJson must be valid JSON array");
+  }
+
+  if (photoFiles.length > 0) {
+    const adminClient = createSupabaseAdminClient();
+    const uploadedPhotos: string[] = [];
+
+    for (const [index, file] of photoFiles.entries()) {
+      const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      const path = `${id}/${Date.now()}-${index}.${extension}`;
+      const bytes = await file.arrayBuffer();
+      const { error: uploadError } = await adminClient.storage.from("product-images").upload(path, bytes, {
+        contentType: file.type,
+        upsert: false,
+      });
+      if (uploadError) throw new Error(uploadError.message);
+      const { data } = adminClient.storage.from("product-images").getPublicUrl(path);
+      uploadedPhotos.push(data.publicUrl);
+    }
+
+    photos = [...photos, ...uploadedPhotos];
   }
 
   try {

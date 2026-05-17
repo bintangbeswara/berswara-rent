@@ -157,9 +157,15 @@ export function formatCategoryLabel(category: string): string {
     .join(" ");
 }
 
-export function createWhatsAppLink(productName: string): string {
+function toWhatsappNumber(value: string): string {
+  const digitsOnly = value.replace(/\D/g, "");
+  if (!digitsOnly) return "";
+  return digitsOnly.startsWith("0") ? `62${digitsOnly.slice(1)}` : digitsOnly;
+}
+
+export function createWhatsAppLink(productName: string, whatsappNumber: string): string {
   const message = `Hi Berswara Baby Rent, I'm interested in renting the ${productName}. Is it available for [Dates]?`;
-  return `https://wa.me/6281234567890?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${toWhatsappNumber(whatsappNumber)}?text=${encodeURIComponent(message)}`;
 }
 
 export function formatDate(dateString: string): string {

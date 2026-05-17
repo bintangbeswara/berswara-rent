@@ -1,12 +1,33 @@
 import type { Locale } from "@/lib/i18n";
+import type { SiteContent } from "@/lib/cms";
 
-export function FloatingWhatsApp({ locale }: { locale: Locale }) {
+function toWhatsappNumber(value: string): string {
+  const digitsOnly = value.replace(/\D/g, "");
+  if (!digitsOnly) return "";
+  return digitsOnly.startsWith("0") ? `62${digitsOnly.slice(1)}` : digitsOnly;
+}
+
+function toInstagramHref(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "https://instagram.com";
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+  return `https://instagram.com/${trimmed.replace(/^@+/, "")}`;
+}
+
+export function FloatingContactButtons({
+  locale,
+  contact,
+}: {
+  locale: Locale;
+  contact: SiteContent["contact"];
+}) {
   const isId = locale === "id";
   const message = isId
     ? "Halo Berswara Baby Rent, saya ingin tanya ketersediaan produk."
     : "Hi Berswara Baby Rent, I would like to ask about product availability.";
-  const whatsappHref = `https://wa.me/6281234567890?text=${encodeURIComponent(message)}`;
-  const instagramHref = "https://instagram.com/berswararent";
+  const whatsappNumber = toWhatsappNumber(contact.whatsapp);
+  const whatsappHref = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+  const instagramHref = toInstagramHref(contact.instagram);
 
   return (
     <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2">
