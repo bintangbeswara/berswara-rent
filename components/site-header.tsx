@@ -58,17 +58,17 @@ export function SiteHeader({
               {item.label}
             </Link>
           ))}
-          <label className="text-sm text-[var(--muted)]">
-            {labels.language}
-            <select
-              className="ml-2 rounded-full border border-[var(--brand-soft)] bg-white px-2 py-1"
-              value={locale}
-              onChange={(event) => void onLocaleChange(event.target.value as Locale)}
-            >
-              <option value="id">ID</option>
-              <option value="en">EN</option>
-            </select>
-          </label>
+          {/*<label className="text-sm text-[var(--muted)]">*/}
+          {/*  {labels.language}*/}
+          {/*  <select*/}
+          {/*    className="ml-2 rounded-full border border-[var(--brand-soft)] bg-white px-2 py-1"*/}
+          {/*    value={locale}*/}
+          {/*    onChange={(event) => void onLocaleChange(event.target.value as Locale)}*/}
+          {/*  >*/}
+          {/*    <option value="id">ID</option>*/}
+          {/*    <option value="en">EN</option>*/}
+          {/*  </select>*/}
+          {/*</label>*/}
         </nav>
       </div>
       {open ? (

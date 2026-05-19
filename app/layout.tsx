@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { FloatingContactButtons } from "@/components/floating-contact-buttons";
 import { dictionaries, getLocale } from "@/lib/i18n";
 import { getSiteContent } from "@/lib/cms";
+import { getSiteUrl } from "@/lib/seo";
 
 const headingFont = Baloo_2({
   variable: "--font-heading",
@@ -19,16 +20,46 @@ const bodyFont = Nunito({
 
 export async function generateMetadata(): Promise<Metadata> {
   const content = await getSiteContent("id");
+  const siteUrl = getSiteUrl();
+  const metadataBase = new URL(siteUrl);
+  const iconUrl = content.faviconImage?.startsWith("http")
+    ? content.faviconImage
+    : `${siteUrl}${content.faviconImage}`;
+  const ogImage = `${siteUrl}/images/hero-baby-stroller.svg`;
+
   return {
-    metadataBase: new URL("https://berswara-rent.example"),
+    metadataBase,
     title: "Berswara Baby Rent | Premium Baby Equipment Rental Bandung",
     description:
       "Rent premium and clean baby gear from Berswara Baby Rent in Bandung, Jawa Barat.",
     alternates: { canonical: "/" },
+    openGraph: {
+      type: "website",
+      locale: "id_ID",
+      url: siteUrl,
+      siteName: "Berswara Baby Rent",
+      title: "Berswara Baby Rent | Premium Baby Equipment Rental Bandung",
+      description: "Rent premium and clean baby gear from Berswara Baby Rent in Bandung, Jawa Barat.",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: "Berswara Baby Rent hero image" }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Berswara Baby Rent | Premium Baby Equipment Rental Bandung",
+      description: "Rent premium and clean baby gear from Berswara Baby Rent in Bandung, Jawa Barat.",
+      images: [ogImage],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+      },
+    },
     icons: {
-      icon: content.faviconImage,
-      shortcut: content.faviconImage,
-      apple: content.faviconImage,
+      icon: iconUrl,
+      shortcut: iconUrl,
+      apple: iconUrl,
     },
   };
 }
